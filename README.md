@@ -532,34 +532,61 @@ The code reports:
 
 ---
 
-# 14. Results
-
-The exact numerical results are printed by the experiment and should be inserted below.
+## Results
 
 ### Base Model
 
-| Metric                |   Result |
-| --------------------- | -------: |
-| Old 20-class accuracy | `XX.XX%` |
+The ResNet18 model was first trained from scratch on the initial 20 classes.
+
+| Metric                |     Result |
+| --------------------- | ---------: |
+| Old 20-class accuracy | **49.47%** |
+
+This serves as the baseline for measuring catastrophic forgetting after incremental learning.
 
 ### Incremental Learning Comparison
 
-| Metric                      | No Distillation | With Distillation |
-| --------------------------- | --------------: | ----------------: |
-| Total accuracy (37 classes) |        `XX.XX%` |          `XX.XX%` |
-| Old 20-class accuracy       |        `XX.XX%` |          `XX.XX%` |
-| New 17-class accuracy       |        `XX.XX%` |          `XX.XX%` |
-| Forgetting vs. base         |  `XX.XX points` |    `XX.XX points` |
+| Metric                      |  No Distillation | With Distillation |
+| --------------------------- | ---------------: | ----------------: |
+| Total accuracy (37 classes) |       **27.42%** |        **33.47%** |
+| Old 20-class accuracy       |        **0.00%** |        **17.31%** |
+| New 17-class accuracy       |       **59.60%** |        **52.43%** |
+| Forgetting vs. base         | **49.47 points** |  **32.16 points** |
 
 ### Interpretation
 
-The naive fine-tuning experiment demonstrates the effect of catastrophic forgetting: after the model is optimized for the 17 new classes, its performance on the original 20 classes can decrease.
+The results clearly demonstrate the catastrophic forgetting problem.
 
-The exemplar replay + knowledge distillation approach attempts to reduce this degradation by retaining a small memory of representative old-class examples and matching the original model's predictions on those examples.
+After expanding the classifier from 20 to 37 classes and fine-tuning only on the 17 new classes, the **old-class accuracy dropped from 49.47% to 0.00%**. This corresponds to **49.47 percentage points of forgetting**.
 
-The expected comparison is therefore not simply based on total accuracy. The most important metric is the **old-class accuracy and the corresponding forgetting value**.
+The model performs reasonably well on the new classes, achieving **59.60% accuracy**, but completely loses its ability to correctly classify the original 20 classes. This shows that naive fine-tuning strongly favors the newly introduced classes when no old-class examples are available during training.
 
-If the distillation model has a smaller forgetting value than the naive model, it indicates that the proposed strategy successfully preserved more of the previously learned knowledge.
+Adding **exemplar replay and knowledge distillation** improves retention of the previously learned knowledge. Old-class accuracy increases from **0.00% to 17.31%**, reducing forgetting from **49.47 to 32.16 percentage points**.
+
+The total 37-class accuracy also improves from **27.42% to 33.47%**, an improvement of **6.05 percentage points**.
+
+However, the new-class accuracy decreases from **59.60% to 52.43%**. This trade-off is expected: the distillation objective constrains the updated model to preserve the behavior of the original model while it is simultaneously learning the new classes.
+
+Overall, the experiment shows that **exemplar replay combined with knowledge distillation mitigates catastrophic forgetting**, although it does not completely eliminate it.
+
+### Key Observation
+
+The most important comparison is the old-class performance:
+
+$$
+49.47\% \rightarrow 0.00\%
+$$
+
+with naive fine-tuning, compared with:
+
+$$
+49.47\% \rightarrow 17.31\%
+$$
+
+when exemplar replay and knowledge distillation are introduced.
+
+Thus, the proposed mitigation strategy preserves substantially more of the original knowledge than naive incremental fine-tuning.
+
 
 ---
 
@@ -592,11 +619,8 @@ plt.savefig("distillation_comparison.png", dpi=150)
 
 Add the generated plot to the repository and display it in the README using:
 
-```markdown
-## Results Comparison
+<img width="590" height="390" alt="image" src="https://github.com/user-attachments/assets/ceb9ce44-4f55-4e62-9556-91d6bfc9cff7" />
 
-![Distillation Comparison](distillation_comparison.png)
-```
 
 ---
 
