@@ -516,28 +516,12 @@ However, the new-class accuracy decreases from **59.60% to 52.43%**. This trade-
 
 Overall, the experiment shows that **exemplar replay combined with knowledge distillation mitigates catastrophic forgetting**, although it does not completely eliminate it.
 
-### Key Observation
 
-The most important comparison is the old-class performance:
-
-$$
-49.47\% \rightarrow 0.00\%
-$$
-
-with naive fine-tuning, compared with:
-
-$$
-49.47\% \rightarrow 17.31\%
-$$
-
-when exemplar replay and knowledge distillation are introduced.
-
-Thus, the proposed mitigation strategy preserves substantially more of the original knowledge than naive incremental fine-tuning.
 
 
 ---
 
-# 15. Comparison Plot
+# Comparison Plot
 
 The implementation generates the following comparison plot:
 
