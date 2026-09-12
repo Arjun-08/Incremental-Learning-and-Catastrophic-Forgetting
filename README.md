@@ -165,9 +165,7 @@ The model is trained using cross-entropy loss with label smoothing.
 For a classification problem with \(C\) classes:
 
 $$
-\mathcal{L}_{CE}
-=
--\sum_{c=1}^{C} y_c \log(p_c)
+\mathcal{L}_{CE} = -\sum_{c=1}^{C} y_c \log(p_c)
 $$
 
 where:
@@ -194,7 +192,7 @@ These represent the model's knowledge before learning the new classes.
 
 ---
 
-# 6. Stage 2: Naive Incremental Learning
+# Stage 2: Naive Incremental Learning
 
 The next step is to introduce the 17 new classes.
 
@@ -261,24 +259,18 @@ The model is evaluated separately on:
 
 The implementation calculates the decrease in old-class performance as:
 
-$$
-\text{Forgetting}
-=
-Acc_{old}^{before}
--
-Acc_{old}^{after}
-$$
+$$\text{Forgetting} = \mathrm{Acc}_{\mathrm{old}}^{\mathrm{before}} - \mathrm{Acc}_{\mathrm{old}}^{\mathrm{after}}$$
 
 where:
 
-* \(Acc_{old}^{before}\) = accuracy of the original 20-class model
-* \(Acc_{old}^{after}\) = accuracy on the same 20 classes after learning the new classes
+* $$\mathrm{Acc}_{\mathrm{old}}^{\mathrm{before}}$$ = accuracy of the original 20-class model
+* $$\mathrm{Acc}_{\mathrm{old}}^{\mathrm{after}}$$ = accuracy on the same 20 classes after learning the new classes
 
 This directly measures catastrophic forgetting.
 
 ---
 
-# 7. Why Does Catastrophic Forgetting Occur?
+# Why Does Catastrophic Forgetting Occur?
 
 During Stage 2, the model is optimized using only examples from the 17 new classes.
 
@@ -291,18 +283,14 @@ Gradient updates therefore modify the feature extractor and classifier toward th
 Conceptually:
 
 $$
-\theta_{new}
-=
-\theta_{old}
--
-\eta\nabla_{\theta}\mathcal{L}_{new}
+\theta_{new} = \theta_{old} - \eta \nabla_{\theta}\mathcal{L}_{new}
 $$
 
 where:
 
-* \(\theta\) represents model parameters
-* \(\eta\) is the learning rate
-* \(\mathcal{L}_{new}\) is the loss calculated on the new classes
+- $\theta$ represents model parameters
+- $\eta$ is the learning rate
+- $\mathcal{L}_{new}$ is the loss calculated on the new classes
 
 Because the optimization objective contains information about the new classes but not the old classes, parameters useful for old-class recognition can change.
 
@@ -312,7 +300,7 @@ That decrease is the **catastrophic forgetting effect** the assignment asks us t
 
 ---
 
-# 8. Stage 3: Exemplar Replay
+# Stage 3: Exemplar Replay
 
 To reduce forgetting, a small number of examples from the old classes are retained.
 
@@ -338,7 +326,7 @@ The implementation uses **herding** to select representative examples from each 
 
 ---
 
-# 9. Herding-Based Exemplar Selection
+# Herding-Based Exemplar Selection
 
 The purpose of exemplar selection is to choose a small set of images that represents each old class well.
 
@@ -355,10 +343,7 @@ $$
 For each class, the mean feature vector is calculated:
 
 $$
-\mu_c
-=
-\frac{1}{N_c}
-\sum_{i=1}^{N_c} z_i
+\mu_c = \frac{1}{N_c} \sum_{i=1}^{N_c} z_i
 $$
 
 The algorithm then greedily selects examples whose running feature mean is closest to the class mean.
@@ -367,7 +352,7 @@ The implementation therefore attempts to choose representative examples rather t
 
 ---
 
-# 10. Knowledge Distillation
+# Knowledge Distillation
 
 Exemplar replay alone provides a small amount of old-class data.
 
@@ -391,74 +376,48 @@ The assignment specifies a distillation objective encouraging the new model to p
 
 ---
 
-# 11. Distillation Loss Used in the Implementation
+# Distillation Loss Used in the Implementation
 
 The implementation uses KL divergence between the teacher and student distributions.
 
 First, the logits are softened using a temperature \(T\).
-
-Teacher distribution:
-
-$$
-p_T
-=
-softmax\left(\frac{z_T}{T}\right)
-$$
-
-Student distribution:
+### Teacher distribution
 
 $$
-p_S
-=
-softmax\left(\frac{z_S}{T}\right)
+p_T = \mathrm{softmax}\left(\frac{z_T}{T}\right)
+$$
+
+### Student distribution
+
+$$
+p_S = \mathrm{softmax}\left(\frac{z_S}{T}\right)
 $$
 
 The KL-divergence loss is:
 
 $$
-\mathcal{L}_{KD}
-=
-T^2
-D_{KL}(p_T \parallel p_S)
+\mathcal{L}_{KD} = T^2 D_{KL}(p_T \parallel p_S)
 $$
 
-or:
+or equivalently:
 
 $$
-\mathcal{L}_{KD}
-=
-T^2
-\sum_i
-p_T(i)
-\log
-\frac{p_T(i)}
-{p_S(i)}
+L_{KD} = T^2 \sum_i p_T(i) \log\left(\frac{p_T(i)}{p_S(i)}\right)
 $$
 
-The factor \(T^2\) is used to maintain an appropriate gradient scale when temperature scaling is applied.
+The factor $T^2$ is used to maintain an appropriate gradient scale when temperature scaling is applied.
 
-In the implementation:
-
-```python
-temperature = 2.0
-alpha = 1.0
-```
-
-and the final optimization objective is:
+The final optimization objective is:
 
 $$
-\mathcal{L}
-=
-\mathcal{L}_{classification}
-+
-\alpha\mathcal{L}_{KD}
+L = L_{classification} + \alpha L_{KD}
 $$
 
 The classification loss ensures that the model learns the new classes, while the distillation loss encourages it to preserve the old model's behavior on the exemplars.
 
 ---
 
-# 12. Combined Incremental Learning Approach
+# Combined Incremental Learning Approach
 
 The complete approach can therefore be summarized as:
 
@@ -499,7 +458,7 @@ The complete approach can therefore be summarized as:
 
 ---
 
-# 13. Experimental Comparison
+# Experimental Comparison
 
 Three models are effectively evaluated:
 
@@ -599,92 +558,12 @@ between:
 
 A horizontal reference line also represents the original 20-class base-model accuracy.
 
-The plotting code saves the figure using:
-
-```python
-plt.savefig("distillation_comparison.png", dpi=150)
-```
-
-Add the generated plot to the repository and display it in the README using:
-
 <img width="590" height="390" alt="image" src="https://github.com/user-attachments/assets/ceb9ce44-4f55-4e62-9556-91d6bfc9cff7" />
 
 
 ---
 
-# 16. What Was Tried
-
-The experiment follows a progressively stronger approach rather than directly applying distillation.
-
-### Approach 1: Train from scratch
-
-A ResNet18 is trained on the initial 20 classes.
-
-Purpose:
-
-* Establish a baseline
-* Measure how well the model learns the initial task
-* Obtain the original feature extractor \(F_0\) and classifier \(G_0\)
-
----
-
-### Approach 2: Naive incremental fine-tuning
-
-The classifier is expanded:
-
-$$
-20 \rightarrow 37
-$$
-
-The model is then fine-tuned using only the 17 new classes.
-
-Purpose:
-
-* Simulate a realistic incremental learning scenario
-* Measure how much old knowledge is lost
-
-Expected issue:
-
-$$
-\text{New knowledge} \uparrow
-\quad
-\text{Old knowledge} \downarrow
-$$
-
-This demonstrates catastrophic forgetting.
-
----
-
-### Approach 3: Exemplar replay + knowledge distillation
-
-Five representative examples are retained for every old class.
-
-$$
-5 \times 20 = 100 \text{ exemplars}
-$$
-
-These examples are combined with new-class training batches.
-
-The model is trained using:
-
-$$
-\mathcal{L}
-=
-\mathcal{L}_{CE}
-+
-\alpha\mathcal{L}_{KD}
-$$
-
-Purpose:
-
-* Continue learning the new 17 classes
-* Replay a small amount of old data
-* Preserve the behavior of the original model
-* Reduce catastrophic forgetting
-
----
-
-# 17. Hyperparameters
+# Hyperparameters
 
 | Parameter                      |              Value |
 | ------------------------------ | -----------------: |
@@ -713,96 +592,14 @@ These values are taken directly from the implementation.
 
 ---
 
-# 18. Key Concepts
+#  Conclusion
 
-### Incremental Learning
-
-Incremental learning is the process of updating a model as new classes or data become available without completely retraining the model from the beginning.
-
-In this experiment:
-
-$$
-20\ classes
-\rightarrow
-37\ classes
-$$
-
----
-
-### Catastrophic Forgetting
-
-Catastrophic forgetting occurs when learning new information causes a neural network to lose previously acquired knowledge.
-
-In this experiment:
-
-$$
-Acc_{old}^{before}
->
-Acc_{old}^{after}
-$$
-
-indicates forgetting.
-
----
-
-### Exemplar Replay
-
-Exemplar replay stores a small number of representative samples from previously learned classes.
-
-Here:
-
-$$
-5\ examples/class
-$$
-
-are stored for the original 20 classes.
-
----
-
-### Knowledge Distillation
-
-Knowledge distillation transfers knowledge from a previously trained teacher model to a newly updated student model.
-
-Here:
-
-$$
-Teacher = (F_0,G_0)
-$$
-
-and
-
-$$
-Student = (F_1,G_1)
-$$
-
-The student is encouraged to preserve the teacher's output distribution on the old exemplars.
-
----
-
-### Herding
-
-Herding is used to select representative samples from each old class based on their feature representations.
-
-Instead of randomly storing five images, the implementation selects samples whose feature mean is close to the overall class feature mean.
-
----
-
-# 19. Final Takeaway
-
-This experiment demonstrates the central challenge of incremental learning.
-
-Simply expanding the classifier from 20 to 37 classes and fine-tuning on the new classes allows the model to learn the new classes, but the absence of old training examples can cause the model to forget previously learned classes.
+This experiment demonstrates the central challenge of incremental learning. Simply expanding the classifier from 20 to 37 classes and fine-tuning on the new classes allows the model to learn the new classes, but the absence of old training examples can cause the model to forget previously learned classes.
 
 The second approach addresses this problem using a small memory of representative old examples and knowledge distillation:
 
 $$
-\boxed{
-\mathcal{L}
-=
-\mathcal{L}_{CE}
-+
-\alpha\mathcal{L}_{KD}
-}
+\boxed{L = L_{CE} + \alpha L_{KD}}
 $$
 
 The classification loss promotes learning of the new classes, while the distillation loss constrains the updated model to remain consistent with the original model on the retained exemplars.
