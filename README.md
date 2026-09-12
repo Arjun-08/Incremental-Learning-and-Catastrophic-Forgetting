@@ -8,11 +8,11 @@ The objective is to investigate whether a neural network can learn new classes w
 2. Expand the classifier to 37 classes and fine-tune it using only the 17 new classes.
 3. Use exemplar replay and knowledge distillation to reduce the forgetting of the original 20 classes.
 
-The assignment asks whether models can continuously learn new classes while retaining previously acquired knowledge, and specifically evaluates the effect of fine-tuning and distillation on the original classes.
+This implementation assess whether models can continuously learn new classes while retaining previously acquired knowledge, and specifically evaluates the effect of fine-tuning and distillation on the original classes.
 
 ---
 
-## 1. Problem Statement
+## Problem Statement
 
 Traditional neural networks are generally trained assuming that all classes are available during training.
 
@@ -33,7 +33,7 @@ This phenomenon is known as **catastrophic forgetting**.
 
 ---
 
-## 2. Dataset
+## Dataset
 
 The experiment uses the **Oxford-IIIT Pet dataset**, which contains 37 pet classes.
 
@@ -68,7 +68,7 @@ The class split is explicitly implemented using the first 20 class IDs as the ol
 
 ---
 
-## 3. Image Preprocessing
+## Image Preprocessing
 
 Two different transformations are used for training and evaluation.
 
@@ -83,13 +83,6 @@ Training images are:
 * Converted to tensors
 * Normalized using ImageNet mean and standard deviation
 
-```python
-RandomResizedCrop(224)
-RandomHorizontalFlip()
-ColorJitter()
-ToTensor()
-Normalize()
-```
 
 ### Evaluation transformations
 
@@ -105,13 +98,9 @@ This ensures that random augmentation does not affect test results.
 
 ---
 
-# 4. Model Architecture
+# Model Architecture
 
-The backbone used in the experiment is **ResNet18**, trained from scratch.
-
-The assignment allows either ResNet18 or ResNet50.
-
-The implementation removes the original ResNet fully connected layer and replaces it with a new classifier.
+The backbone used in the experiment is **ResNet18**, trained from scratch. The implementation removes the original ResNet fully connected layer and replaces it with a new classifier.
 
 ```text
 Input Image
@@ -146,13 +135,12 @@ $$
 G_1 \in \mathbb{R}^{37 \times f}
 $$
 
-This corresponds directly to the formulation in the assignment.
 
 The implementation creates the feature extractor by replacing the original ResNet FC layer with an identity layer and then adds a new linear classifier.
 
 ---
 
-# 5. Training Strategy
+# Training Strategy
 
 The experiment follows three main stages.
 
